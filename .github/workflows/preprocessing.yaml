@@ -1,37 +1,43 @@
-name: Preprocessing Automation
+name: Preprocessing 
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
-
+    paths:
+      - 'transactions_dataset/**'     
+  
 jobs:
-  preprocess:
+  run-preprocessing:
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.11
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install scikit-learn
+        run: pip install -r requirements.txt  
 
-      - name: Run preprocessing script
-        run: |
-          python preprocessing/automate_difa.py
+      - name: Run preprocessing
 
-      - name: Commit processed dataset
+        run: python preprocessing/automate_difa.py 
+
+      - name: Commit processed data
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
-          git add preprocessing/dataset_preprocessing
-          git commit -m "Auto preprocessing update"
-          git push
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/processed/* # Pastikan script Anda menyimpan output di sini
+          
+          # Cek apakah ada perubahan sebelum commit
+          if git diff-index --quiet HEAD; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto: Update processed data"
+            git push
+          fi
